@@ -4,6 +4,16 @@ import { supabase } from '../../services/supabase';
 
 const parseNum = (val) => Number(String(val).replace(',', '.'));
 
+// A definição de Section precisava estar FORA do componente DreModal para não perder o foco
+const Section = ({ title, children, color }) => (
+  <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: '8px', borderLeft: `4px solid var(--accent-${color})` }}>
+    <h4 style={{ color: `var(--accent-${color})`, marginBottom: '16px' }}>{title}</h4>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      {children}
+    </div>
+  </div>
+);
+
 export function DreModal({ isOpen, onClose, clienteId, lancamentoAtual, onSalvarSucesso }) {
   const [isLoading, setIsLoading] = useState(false);
   const [mesReferencia, setMesReferencia] = useState('');
@@ -69,15 +79,6 @@ export function DreModal({ isOpen, onClose, clienteId, lancamentoAtual, onSalvar
       setIsLoading(false);
     }
   };
-
-  const Section = ({ title, children, color }) => (
-    <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: '8px', borderLeft: `4px solid var(--accent-${color})` }}>
-      <h4 style={{ color: `var(--accent-${color})`, marginBottom: '16px' }}>{title}</h4>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-        {children}
-      </div>
-    </div>
-  );
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Lançamentos Financeiros - Varejo Físico">
