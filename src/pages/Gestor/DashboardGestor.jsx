@@ -16,7 +16,7 @@ export function DashboardGestor() {
   const [lancamentos, setLancamentos] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // States: Modal Cliente
+  // States: Modal Cliente (Loja Física)
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [editandoClienteId, setEditandoClienteId] = useState(null);
   const [razaoSocial, setRazaoSocial] = useState('');
@@ -52,7 +52,7 @@ export function DashboardGestor() {
   };
 
   // ==========================================
-  // MOTOR DE CÁLCULOS DRE COMPLETO
+  // MOTOR DE CÁLCULOS DRE (VAREJO FÍSICO)
   // ==========================================
   const calcularMetricas = () => {
     let dados = lancamentos;
@@ -60,49 +60,40 @@ export function DashboardGestor() {
       dados = lancamentos.filter(l => l.cliente_id === visaoAtual);
     }
 
-    // Agrega todos os campos da tabela DRE
     const soma = dados.reduce((acc, curr) => {
       Object.keys(acc).forEach(key => {
         acc[key] += Number(curr[key] || 0);
       });
       return acc;
     }, {
-      receita_vendas: 0, receita_servicos: 0,
-      deducoes_devolucoes: 0, deducoes_impostos: 0, deducoes_taxas: 0,
-      custo_mercadorias: 0, custo_fretes: 0,
-      despesas_vendas: 0, despesas_administrativas: 0,
-      despesas_financeiras: 0, receitas_financeiras: 0,
+      vendas_cartao: 0, vendas_pix_dinheiro: 0,
+      taxas_maquininha: 0, impostos_vendas: 0,
+      custo_mercadorias: 0,
+      despesas_ponto: 0, folha_pagamento: 0, despesas_gerais: 0,
       impostos_ir_csll: 0, pro_labore: 0
     });
 
-    // Cálculos em cascata do DRE
-    soma.receitaBruta = soma.receita_vendas + soma.receita_servicos;
-    soma.totalDeducoes = soma.deducoes_devolucoes + soma.deducoes_impostos + soma.deducoes_taxas;
+    soma.receitaBruta = soma.vendas_cartao + soma.vendas_pix_dinheiro;
+    soma.totalDeducoes = soma.taxas_maquininha + soma.impostos_vendas;
     soma.receitaLiquida = soma.receitaBruta - soma.totalDeducoes;
     
-    soma.totalCustos = soma.custo_mercadorias + soma.custo_fretes;
+    soma.totalCustos = soma.custo_mercadorias;
     soma.lucroBruto = soma.receitaLiquida - soma.totalCustos;
     
-    soma.totalDespesasOp = soma.despesas_vendas + soma.despesas_administrativas;
-    soma.lucroOperacional = soma.lucroBruto - soma.totalDespesasOp;
+    soma.totalDespesasOp = soma.despesas_ponto + soma.folha_pagamento + soma.despesas_gerais;
+    soma.totalProvisoes = soma.impostos_ir_csll + soma.pro_labore;
     
-    soma.resultadoFinanceiro = soma.receitas_financeiras - soma.despesas_financeiras;
-    soma.lair = soma.lucroOperacional + soma.resultadoFinanceiro;
-    
-    soma.lucroLiquido = soma.lair - soma.impostos_ir_csll - soma.pro_labore;
+    soma.lucroLiquido = soma.lucroBruto - soma.totalDespesasOp - soma.totalProvisoes;
 
-    // Indicadores para os Cards
     let margemLiquida = 0;
     if (soma.receitaBruta > 0) margemLiquida = (soma.lucroLiquido / soma.receitaBruta) * 100;
 
-    let margemBruta = 0;
-    if (soma.receitaLiquida > 0) margemBruta = (soma.lucroBruto / soma.receitaLiquida) * 100;
+    let pesoTaxas = 0;
+    if (soma.receitaBruta > 0) pesoTaxas = (soma.taxas_maquininha / soma.receitaBruta) * 100;
 
-    // Ponto de Equilíbrio = Custos e Desp Fixas / Margem de Contribuição (%)
-    // Margem Contribuição = Receita Liquida - CMV - Despesas Variáveis(vendas)
-    const margemContribuicao = soma.receitaLiquida - soma.totalCustos - soma.despesas_vendas;
+    const margemContribuicao = soma.receitaLiquida - soma.totalCustos;
     let mcPercentual = soma.receitaLiquida > 0 ? (margemContribuicao / soma.receitaLiquida) : 0;
-    let pontoEquilibrio = mcPercentual > 0 ? (soma.despesas_administrativas / mcPercentual) : 0;
+    let pontoEquilibrio = mcPercentual > 0 ? (soma.totalDespesasOp / mcPercentual) : 0;
 
     return {
       dadosDRE: soma,
@@ -111,7 +102,7 @@ export function DashboardGestor() {
         lucroBruto: formatCurrency(soma.lucroBruto),
         lucroLiquido: formatCurrency(soma.lucroLiquido),
         margemLiquida: `${margemLiquida.toFixed(1)}%`,
-        margemBruta: `${margemBruta.toFixed(1)}%`,
+        pesoTaxas: `${pesoTaxas.toFixed(1)}%`,
         pontoEquilibrio: formatCurrency(pontoEquilibrio)
       }
     };
@@ -119,9 +110,6 @@ export function DashboardGestor() {
 
   const metricas = calcularMetricas();
 
-  // ==========================================
-  // HANDLERS
-  // ==========================================
   const abrirModalEditarCliente = () => {
     const cliente = clientes.find(c => c.id === visaoAtual);
     if (cliente) {
@@ -158,7 +146,7 @@ export function DashboardGestor() {
       }
       setIsClientModalOpen(false);
     } catch (error) {
-      alert('Erro ao salvar cliente.');
+      alert('Erro ao salvar loja física.');
     } finally {
       setIsLoading(false);
     }
@@ -169,7 +157,6 @@ export function DashboardGestor() {
     return cliente ? cliente.nome_loja_ml : 'Loja Desconhecida';
   };
 
-  // Pega o lançamento do mes atual ou vazio pra mandar pro Modal
   const lancamentoModalAtual = lancamentos.find(l => l.cliente_id === visaoAtual) || null;
 
   return (
@@ -178,10 +165,10 @@ export function DashboardGestor() {
         <div>
           <div className="header-title-row">
             <h1 className="page-title">
-              {visaoAtual === 'consolidada' ? 'Visão Consolidada' : getClientNameById(visaoAtual)}
+              {visaoAtual === 'consolidada' ? 'Visão Consolidada (Carteira)' : getClientNameById(visaoAtual)}
             </h1>
             <select className="view-selector" value={visaoAtual} onChange={(e) => setVisaoAtual(e.target.value)}>
-              <option value="consolidada">Todas as Lojas (Consolidado)</option>
+              <option value="consolidada">Todos os Estabelecimentos</option>
               {clientes.map(cliente => (
                 <option key={cliente.id} value={cliente.id}>{cliente.nome_loja_ml}</option>
               ))}
@@ -189,15 +176,15 @@ export function DashboardGestor() {
           </div>
           <p className="text-secondary">
             {visaoAtual === 'consolidada' 
-              ? 'Acompanhamento financeiro de todas as lojas'
-              : `Analisando os resultados individuais de ${getClientNameById(visaoAtual)}`}
+              ? 'Análise da carteira de Lojas Físicas'
+              : `Resultados do estabelecimento ${getClientNameById(visaoAtual)}`}
           </p>
         </div>
         <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {visaoAtual !== 'consolidada' && (
             <>
               <button className="btn-secondary" onClick={() => setIsDreModalOpen(true)} style={{ backgroundColor: 'var(--accent-green)', color: '#fff', border: 'none' }}>
-                💵 Lançar DRE
+                💵 Lançar DRE do Mês
               </button>
               <button className="btn-secondary" onClick={abrirModalEditarCliente}>
                 ✏️ Editar Loja
@@ -205,16 +192,16 @@ export function DashboardGestor() {
             </>
           )}
           <button className="btn-primary" onClick={abrirModalNovoCliente}>
-            + Nova Loja
+            + Novo Estabelecimento
           </button>
         </div>
       </header>
 
       <div className="metrics-grid">
-        <MetricCard title="Faturamento Bruto" value={metricas.cards.faturamentoBruto} subtitle="Total Receitas" icon="💰" />
-        <MetricCard title="Lucro Bruto" value={metricas.cards.lucroBruto} subtitle={`Margem: ${metricas.cards.margemBruta}`} icon="📊" />
-        <MetricCard title="Lucro Líquido Final" value={metricas.cards.lucroLiquido} subtitle={`Margem Líquida: ${metricas.cards.margemLiquida}`} icon="💎" />
-        <MetricCard title="Ponto de Equilíbrio" value={metricas.cards.pontoEquilibrio} subtitle="Cobrir Despesas Fixas" icon="⚖️" />
+        <MetricCard title="Vendas Totais" value={metricas.cards.faturamentoBruto} subtitle="Soma de todos os meios" icon="💰" />
+        <MetricCard title="Impacto das Taxas (MDR)" value={metricas.cards.pesoTaxas} subtitle="Da Receita Bruta vai para Adquirentes" icon="💳" />
+        <MetricCard title="Lucro Líquido Real" value={metricas.cards.lucroLiquido} subtitle={`Margem Final: ${metricas.cards.margemLiquida}`} icon="💎" />
+        <MetricCard title="Ponto de Equilíbrio" value={metricas.cards.pontoEquilibrio} subtitle="Meta para pagar aluguel e equipe" icon="⚖️" />
       </div>
 
       <div className="charts-section">
@@ -222,10 +209,10 @@ export function DashboardGestor() {
       </div>
 
       {/* Modais */}
-      <Modal isOpen={isClientModalOpen} onClose={() => setIsClientModalOpen(false)} title={editandoClienteId ? "Editar Loja" : "Cadastrar Nova Loja"}>
+      <Modal isOpen={isClientModalOpen} onClose={() => setIsClientModalOpen(false)} title={editandoClienteId ? "Editar Estabelecimento" : "Cadastrar Nova Loja Física"}>
         <form onSubmit={handleSalvarCliente}>
           <div className="form-group"><label>Razão Social</label><input type="text" className="form-input" value={razaoSocial} onChange={e => setRazaoSocial(e.target.value)} required /></div>
-          <div className="form-group"><label>Nome da Loja (ML)</label><input type="text" className="form-input" value={nomeLoja} onChange={e => setNomeLoja(e.target.value)} required /></div>
+          <div className="form-group"><label>Nome Fantasia / Placa da Loja</label><input type="text" className="form-input" value={nomeLoja} onChange={e => setNomeLoja(e.target.value)} required /></div>
           <div className="form-group"><label>CNPJ</label><input type="text" className="form-input" value={cnpj} onChange={e => setCnpj(e.target.value)} required /></div>
           <div className="form-actions">
             <button type="button" className="btn-secondary" onClick={() => setIsClientModalOpen(false)}>Cancelar</button>

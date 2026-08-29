@@ -10,7 +10,7 @@ export function DreTable({ dados }) {
 
   return (
     <div className="dre-table-container glass-panel">
-      <h3 className="chart-title" style={{ marginBottom: '16px' }}>Demonstração do Resultado do Exercício (DRE)</h3>
+      <h3 className="chart-title" style={{ marginBottom: '16px' }}>Demonstração do Resultado do Exercício (DRE) - Loja Física</h3>
       <table className="dre-table">
         <tbody>
           {/* RECEITA BRUTA */}
@@ -19,12 +19,12 @@ export function DreTable({ dados }) {
             <td className="text-right">{formatCurrency(dados.receitaBruta)}</td>
           </tr>
           <tr className="dre-row-detail">
-            <td className="indent-1">Venda de Produtos (Marketplace)</td>
-            <td className="text-right">{formatCurrency(dados.receita_vendas)}</td>
+            <td className="indent-1">Vendas no Cartão (Crédito/Débito)</td>
+            <td className="text-right">{formatCurrency(dados.vendas_cartao)}</td>
           </tr>
           <tr className="dre-row-detail">
-            <td className="indent-1">Prestação de Serviços / Outros</td>
-            <td className="text-right">{formatCurrency(dados.receita_servicos)}</td>
+            <td className="indent-1">Vendas no PIX e Dinheiro</td>
+            <td className="text-right">{formatCurrency(dados.vendas_pix_dinheiro)}</td>
           </tr>
 
           {/* DEDUÇÕES */}
@@ -33,16 +33,12 @@ export function DreTable({ dados }) {
             <td className="text-right">- {formatCurrency(dados.totalDeducoes)}</td>
           </tr>
           <tr className="dre-row-detail">
-            <td className="indent-1">Devoluções / Vendas Canceladas</td>
-            <td className="text-right">{formatCurrency(dados.deducoes_devolucoes)}</td>
+            <td className="indent-1">Taxas da Maquininha (MDR / Antecipação)</td>
+            <td className="text-right">{formatCurrency(dados.taxas_maquininha)}</td>
           </tr>
           <tr className="dre-row-detail">
-            <td className="indent-1">Impostos (Simples, ICMS, etc)</td>
-            <td className="text-right">{formatCurrency(dados.deducoes_impostos)}</td>
-          </tr>
-          <tr className="dre-row-detail">
-            <td className="indent-1">Taxas de Plataforma (Mercado Livre)</td>
-            <td className="text-right">{formatCurrency(dados.deducoes_taxas)}</td>
+            <td className="indent-1">Impostos sobre Vendas (Simples/ICMS)</td>
+            <td className="text-right">{formatCurrency(dados.impostos_vendas)}</td>
           </tr>
 
           {/* RECEITA LÍQUIDA */}
@@ -57,12 +53,8 @@ export function DreTable({ dados }) {
             <td className="text-right">- {formatCurrency(dados.totalCustos)}</td>
           </tr>
           <tr className="dre-row-detail">
-            <td className="indent-1">Custo das Mercadorias Vendidas</td>
+            <td className="indent-1">Custo das Mercadorias Vendidas (Insumos)</td>
             <td className="text-right">{formatCurrency(dados.custo_mercadorias)}</td>
-          </tr>
-          <tr className="dre-row-detail">
-            <td className="indent-1">Custo com Fretes Diretos</td>
-            <td className="text-right">{formatCurrency(dados.custo_fretes)}</td>
           </tr>
 
           {/* LUCRO BRUTO */}
@@ -77,41 +69,29 @@ export function DreTable({ dados }) {
             <td className="text-right">- {formatCurrency(dados.totalDespesasOp)}</td>
           </tr>
           <tr className="dre-row-detail">
-            <td className="indent-1">Despesas com Vendas (Ads, Embalagens)</td>
-            <td className="text-right">{formatCurrency(dados.despesas_vendas)}</td>
+            <td className="indent-1">Aluguel e Custos do Ponto Físico</td>
+            <td className="text-right">{formatCurrency(dados.despesas_ponto)}</td>
           </tr>
           <tr className="dre-row-detail">
-            <td className="indent-1">Despesas Administrativas (Fixas)</td>
-            <td className="text-right">{formatCurrency(dados.despesas_administrativas)}</td>
+            <td className="indent-1">Folha de Pagamento (Funcionários)</td>
+            <td className="text-right">{formatCurrency(dados.folha_pagamento)}</td>
+          </tr>
+          <tr className="dre-row-detail">
+            <td className="indent-1">Despesas Gerais (Contador, Manutenção)</td>
+            <td className="text-right">{formatCurrency(dados.despesas_gerais)}</td>
           </tr>
 
-          {/* RESULTADO FINANCEIRO */}
+          {/* RESULTADO FINANCEIRO E IMPOSTOS */}
           <tr className="dre-row-subtotal">
-            <td>(+/-) RESULTADO FINANCEIRO LÍQUIDO</td>
-            <td className="text-right">{formatCurrency(dados.resultadoFinanceiro)}</td>
+            <td>(-) PROVISÕES E RETIRADAS</td>
+            <td className="text-right">- {formatCurrency(dados.totalProvisoes)}</td>
           </tr>
           <tr className="dre-row-detail text-danger">
-            <td className="indent-1">(-) Despesas Financeiras</td>
-            <td className="text-right">{formatCurrency(dados.despesas_financeiras)}</td>
-          </tr>
-          <tr className="dre-row-detail text-green">
-            <td className="indent-1">(+) Receitas Financeiras</td>
-            <td className="text-right">{formatCurrency(dados.receitas_financeiras)}</td>
-          </tr>
-
-          {/* LAIR */}
-          <tr className="dre-row-total">
-            <td>= RESULTADO ANTES DOS IMPOSTOS (LAIR)</td>
-            <td className="text-right">{formatCurrency(dados.lair)}</td>
-          </tr>
-
-          {/* IMPOSTOS E PRO LABORE */}
-          <tr className="dre-row-detail text-danger">
-            <td>(-) Provisão para IR / CSLL</td>
+            <td className="indent-1">Impostos sobre Lucro (IR/CSLL)</td>
             <td className="text-right">{formatCurrency(dados.impostos_ir_csll)}</td>
           </tr>
           <tr className="dre-row-detail text-danger">
-            <td>(-) Pró-Labore / Distribuição</td>
+            <td className="indent-1">Retirada dos Sócios (Pró-Labore)</td>
             <td className="text-right">{formatCurrency(dados.pro_labore)}</td>
           </tr>
 

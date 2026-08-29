@@ -8,32 +8,27 @@ export function DreModal({ isOpen, onClose, clienteId, lancamentoAtual, onSalvar
   const [isLoading, setIsLoading] = useState(false);
   const [mesReferencia, setMesReferencia] = useState('');
   
-  // States (Grupos do DRE)
-  const [receitas, setReceitas] = useState({ vendas: 0, servicos: 0 });
-  const [deducoes, setDeducoes] = useState({ devolucoes: 0, impostos: 0, taxas: 0 });
-  const [custos, setCustos] = useState({ mercadorias: 0, fretes: 0 });
-  const [despesas, setDespesas] = useState({ vendas: 0, adm: 0 });
-  const [financeiro, setFinanceiro] = useState({ desp_fin: 0, rec_fin: 0 });
+  const [receitas, setReceitas] = useState({ cartao: 0, pix_dinheiro: 0 });
+  const [deducoes, setDeducoes] = useState({ taxas_maquininha: 0, impostos_vendas: 0 });
+  const [custos, setCustos] = useState({ mercadorias: 0 });
+  const [despesas, setDespesas] = useState({ ponto: 0, folha: 0, gerais: 0 });
   const [outros, setOutros] = useState({ impostos_ir: 0, pro_labore: 0 });
 
   useEffect(() => {
     if (isOpen) {
       if (lancamentoAtual) {
         setMesReferencia(lancamentoAtual.mes_referencia);
-        setReceitas({ vendas: lancamentoAtual.receita_vendas || 0, servicos: lancamentoAtual.receita_servicos || 0 });
-        setDeducoes({ devolucoes: lancamentoAtual.deducoes_devolucoes || 0, impostos: lancamentoAtual.deducoes_impostos || 0, taxas: lancamentoAtual.deducoes_taxas || 0 });
-        setCustos({ mercadorias: lancamentoAtual.custo_mercadorias || 0, fretes: lancamentoAtual.custo_fretes || 0 });
-        setDespesas({ vendas: lancamentoAtual.despesas_vendas || 0, adm: lancamentoAtual.despesas_administrativas || 0 });
-        setFinanceiro({ desp_fin: lancamentoAtual.despesas_financeiras || 0, rec_fin: lancamentoAtual.receitas_financeiras || 0 });
+        setReceitas({ cartao: lancamentoAtual.vendas_cartao || 0, pix_dinheiro: lancamentoAtual.vendas_pix_dinheiro || 0 });
+        setDeducoes({ taxas_maquininha: lancamentoAtual.taxas_maquininha || 0, impostos_vendas: lancamentoAtual.impostos_vendas || 0 });
+        setCustos({ mercadorias: lancamentoAtual.custo_mercadorias || 0 });
+        setDespesas({ ponto: lancamentoAtual.despesas_ponto || 0, folha: lancamentoAtual.folha_pagamento || 0, gerais: lancamentoAtual.despesas_gerais || 0 });
         setOutros({ impostos_ir: lancamentoAtual.impostos_ir_csll || 0, pro_labore: lancamentoAtual.pro_labore || 0 });
       } else {
-        // Reset defaults if new
-        setMesReferencia(new Date().toISOString().slice(0, 7)); // YYYY-MM
-        setReceitas({ vendas: 0, servicos: 0 });
-        setDeducoes({ devolucoes: 0, impostos: 0, taxas: 0 });
-        setCustos({ mercadorias: 0, fretes: 0 });
-        setDespesas({ vendas: 0, adm: 0 });
-        setFinanceiro({ desp_fin: 0, rec_fin: 0 });
+        setMesReferencia(new Date().toISOString().slice(0, 7));
+        setReceitas({ cartao: 0, pix_dinheiro: 0 });
+        setDeducoes({ taxas_maquininha: 0, impostos_vendas: 0 });
+        setCustos({ mercadorias: 0 });
+        setDespesas({ ponto: 0, folha: 0, gerais: 0 });
         setOutros({ impostos_ir: 0, pro_labore: 0 });
       }
     }
@@ -47,22 +42,18 @@ export function DreModal({ isOpen, onClose, clienteId, lancamentoAtual, onSalvar
       const payload = {
         cliente_id: clienteId,
         mes_referencia: mesReferencia,
-        receita_vendas: parseNum(receitas.vendas),
-        receita_servicos: parseNum(receitas.servicos),
-        deducoes_devolucoes: parseNum(deducoes.devolucoes),
-        deducoes_impostos: parseNum(deducoes.impostos),
-        deducoes_taxas: parseNum(deducoes.taxas),
+        vendas_cartao: parseNum(receitas.cartao),
+        vendas_pix_dinheiro: parseNum(receitas.pix_dinheiro),
+        taxas_maquininha: parseNum(deducoes.taxas_maquininha),
+        impostos_vendas: parseNum(deducoes.impostos_vendas),
         custo_mercadorias: parseNum(custos.mercadorias),
-        custo_fretes: parseNum(custos.fretes),
-        despesas_vendas: parseNum(despesas.vendas),
-        despesas_administrativas: parseNum(despesas.adm),
-        despesas_financeiras: parseNum(financeiro.desp_fin),
-        receitas_financeiras: parseNum(financeiro.rec_fin),
+        despesas_ponto: parseNum(despesas.ponto),
+        folha_pagamento: parseNum(despesas.folha),
+        despesas_gerais: parseNum(despesas.gerais),
         impostos_ir_csll: parseNum(outros.impostos_ir),
         pro_labore: parseNum(outros.pro_labore)
       };
 
-      // Tenta remover o atual para evitar dupes do mesmo mes
       await supabase.from('dre_mensal').delete().match({ cliente_id: clienteId, mes_referencia: mesReferencia });
       const { error } = await supabase.from('dre_mensal').insert([payload]);
       
@@ -73,7 +64,7 @@ export function DreModal({ isOpen, onClose, clienteId, lancamentoAtual, onSalvar
       onClose();
     } catch (err) {
       console.error(err);
-      alert('Erro ao salvar. Verifique se o banco de dados foi atualizado.');
+      alert('Erro ao salvar. Verifique se o banco de dados foi atualizado com a nova tabela de Varejo Físico.');
     } finally {
       setIsLoading(false);
     }
@@ -89,39 +80,36 @@ export function DreModal({ isOpen, onClose, clienteId, lancamentoAtual, onSalvar
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Lançamentos Financeiros (DRE)">
+    <Modal isOpen={isOpen} onClose={onClose} title="Lançamentos Financeiros - Varejo Físico">
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Mês de Referência</label>
           <input type="month" className="form-input" value={mesReferencia} onChange={e => setMesReferencia(e.target.value)} required />
         </div>
 
-        <Section title="1. Receitas" color="blue">
-          <div><label>Vendas Mercado Livre</label><input type="text" className="form-input" value={receitas.vendas} onChange={e => setReceitas({...receitas, vendas: e.target.value})} /></div>
-          <div><label>Outras / Serviços</label><input type="text" className="form-input" value={receitas.servicos} onChange={e => setReceitas({...receitas, servicos: e.target.value})} /></div>
+        <Section title="1. Receita Bruta (Meios de Pagamento)" color="blue">
+          <div><label>Vendas Cartão (Onde a Maquininha atua)</label><input type="text" className="form-input" value={receitas.cartao} onChange={e => setReceitas({...receitas, cartao: e.target.value})} /></div>
+          <div><label>Vendas PIX / Dinheiro</label><input type="text" className="form-input" value={receitas.pix_dinheiro} onChange={e => setReceitas({...receitas, pix_dinheiro: e.target.value})} /></div>
         </Section>
 
-        <Section title="2. Deduções (Saídas)" color="danger">
-          <div><label>Devoluções</label><input type="text" className="form-input" value={deducoes.devolucoes} onChange={e => setDeducoes({...deducoes, devolucoes: e.target.value})} /></div>
-          <div><label>Taxas Mercado Livre</label><input type="text" className="form-input" value={deducoes.taxas} onChange={e => setDeducoes({...deducoes, taxas: e.target.value})} /></div>
-          <div><label>Impostos (Simples, ICMS)</label><input type="text" className="form-input" value={deducoes.impostos} onChange={e => setDeducoes({...deducoes, impostos: e.target.value})} /></div>
+        <Section title="2. Deduções (A Dor do Lojista)" color="danger">
+          <div><label>Taxas da Maquininha (MDR)</label><input type="text" className="form-input" value={deducoes.taxas_maquininha} onChange={e => setDeducoes({...deducoes, taxas_maquininha: e.target.value})} /></div>
+          <div><label>Impostos (Simples Nacional / ICMS)</label><input type="text" className="form-input" value={deducoes.impostos_vendas} onChange={e => setDeducoes({...deducoes, impostos_vendas: e.target.value})} /></div>
         </Section>
 
         <Section title="3. Custos Diretos (CMV)" color="danger">
-          <div><label>Custo das Mercadorias</label><input type="text" className="form-input" value={custos.mercadorias} onChange={e => setCustos({...custos, mercadorias: e.target.value})} /></div>
-          <div><label>Custo com Fretes</label><input type="text" className="form-input" value={custos.fretes} onChange={e => setCustos({...custos, fretes: e.target.value})} /></div>
+          <div><label>Custo das Mercadorias / Insumos</label><input type="text" className="form-input" value={custos.mercadorias} onChange={e => setCustos({...custos, mercadorias: e.target.value})} /></div>
         </Section>
 
-        <Section title="4. Despesas Operacionais" color="danger">
-          <div><label>Despesas de Vendas (Ads)</label><input type="text" className="form-input" value={despesas.vendas} onChange={e => setDespesas({...despesas, vendas: e.target.value})} /></div>
-          <div><label>Administrativas (Aluguel, Salário)</label><input type="text" className="form-input" value={despesas.adm} onChange={e => setDespesas({...despesas, adm: e.target.value})} /></div>
+        <Section title="4. Despesas Operacionais (Ponto Físico)" color="danger">
+          <div><label>Aluguel, Água, Luz, Internet</label><input type="text" className="form-input" value={despesas.ponto} onChange={e => setDespesas({...despesas, ponto: e.target.value})} /></div>
+          <div><label>Folha de Pagamento (Funcionários)</label><input type="text" className="form-input" value={despesas.folha} onChange={e => setDespesas({...despesas, folha: e.target.value})} /></div>
+          <div><label>Despesas Gerais (Manutenção, Contador)</label><input type="text" className="form-input" value={despesas.gerais} onChange={e => setDespesas({...despesas, gerais: e.target.value})} /></div>
         </Section>
 
-        <Section title="5. Financeiro e Outros" color="purple">
-          <div><label>Despesas Financeiras (Juros)</label><input type="text" className="form-input" value={financeiro.desp_fin} onChange={e => setFinanceiro({...financeiro, desp_fin: e.target.value})} /></div>
-          <div><label>Receitas Financeiras (Rendimentos)</label><input type="text" className="form-input" value={financeiro.rec_fin} onChange={e => setFinanceiro({...financeiro, rec_fin: e.target.value})} /></div>
-          <div><label>Pró-Labore</label><input type="text" className="form-input" value={outros.pro_labore} onChange={e => setOutros({...outros, pro_labore: e.target.value})} /></div>
-          <div><label>IR / CSLL (Lucro Real)</label><input type="text" className="form-input" value={outros.impostos_ir} onChange={e => setOutros({...outros, impostos_ir: e.target.value})} /></div>
+        <Section title="5. Provisões e Retiradas" color="purple">
+          <div><label>Pró-Labore (Retirada dos Sócios)</label><input type="text" className="form-input" value={outros.pro_labore} onChange={e => setOutros({...outros, pro_labore: e.target.value})} /></div>
+          <div><label>Provisão IR / CSLL</label><input type="text" className="form-input" value={outros.impostos_ir} onChange={e => setOutros({...outros, impostos_ir: e.target.value})} /></div>
         </Section>
 
         <div className="form-actions">
