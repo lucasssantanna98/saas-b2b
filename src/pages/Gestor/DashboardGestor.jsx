@@ -4,19 +4,23 @@ import { Modal } from '../../components/common/Modal';
 import { DreTable } from '../../components/dashboard/DreTable';
 import { DreModal } from '../../components/dashboard/DreModal';
 import { supabase } from '../../services/supabase';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import './DashboardGestor.css';
 
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
 };
 
+const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
+
 export function DashboardGestor() {
   const [visaoAtual, setVisaoAtual] = useState('consolidada'); 
+  const [mesFiltro, setMesFiltro] = useState('todos');
   const [clientes, setClientes] = useState([]);
   const [lancamentos, setLancamentos] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // States: Modal Cliente (Loja Física)
+  // States: Modal Cliente
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [editandoClienteId, setEditandoClienteId] = useState(null);
   const [razaoSocial, setRazaoSocial] = useState('');
@@ -43,7 +47,7 @@ export function DashboardGestor() {
 
   const fetchLancamentos = async () => {
     try {
-      const { data, error } = await supabase.from('dre_mensal').select('*');
+      const { data, error } = await supabase.from('dre_mensal').select('*').order('mes_referencia', { ascending: true });
       if (error && error.code !== '42P01') throw error;
       if (data) setLancamentos(data);
     } catch (error) {
@@ -51,16 +55,27 @@ export function DashboardGestor() {
     }
   };
 
+  // Pega os meses únicos que existem no banco para montar o dropdown
+  const mesesDisponiveis = [...new Set(lancamentos.map(l => l.mes_referencia))].sort().reverse();
+
   // ==========================================
-  // MOTOR DE CÁLCULOS DRE (VAREJO FÍSICO)
+  // MOTOR DE CÁLCULOS E GRÁFICOS
   // ==========================================
   const calcularMetricas = () => {
+    // FILTROS
     let dados = lancamentos;
     if (visaoAtual !== 'consolidada') {
-      dados = lancamentos.filter(l => l.cliente_id === visaoAtual);
+      dados = dados.filter(l => l.cliente_id === visaoAtual);
+    }
+    
+    // Para os cards e tabela, filtra pelo mês se não for 'todos'
+    let dadosFiltradosMes = dados;
+    if (mesFiltro !== 'todos') {
+      dadosFiltradosMes = dados.filter(l => l.mes_referencia === mesFiltro);
     }
 
-    const soma = dados.reduce((acc, curr) => {
+    // 1. SOMA DOS CARDS E TABELA
+    const soma = dadosFiltradosMes.reduce((acc, curr) => {
       Object.keys(acc).forEach(key => {
         acc[key] += Number(curr[key] || 0);
       });
@@ -84,25 +99,58 @@ export function DashboardGestor() {
     soma.totalProvisoes = soma.impostos_ir_csll + soma.pro_labore;
     
     soma.lucroLiquido = soma.lucroBruto - soma.totalDespesasOp - soma.totalProvisoes;
+    soma.lair = soma.lucroBruto - soma.totalDespesasOp;
 
     let margemLiquida = 0;
     if (soma.receitaBruta > 0) margemLiquida = (soma.lucroLiquido / soma.receitaBruta) * 100;
-
-    let pesoTaxas = 0;
-    if (soma.receitaBruta > 0) pesoTaxas = (soma.taxas_maquininha / soma.receitaBruta) * 100;
 
     const margemContribuicao = soma.receitaLiquida - soma.totalCustos;
     let mcPercentual = soma.receitaLiquida > 0 ? (margemContribuicao / soma.receitaLiquida) : 0;
     let pontoEquilibrio = mcPercentual > 0 ? (soma.totalDespesasOp / mcPercentual) : 0;
 
+    // 2. DADOS PRO GRÁFICO DE PIZZA (Raio-X de Custos)
+    const dadosRaioX = [
+      { name: 'Lucro Líquido', value: soma.lucroLiquido > 0 ? soma.lucroLiquido : 0 },
+      { name: 'Taxas e Impostos', value: soma.totalDeducoes },
+      { name: 'Custo Mercadoria', value: soma.totalCustos },
+      { name: 'Despesas Fixas', value: soma.totalDespesasOp },
+      { name: 'Pró-Labore e IR', value: soma.totalProvisoes },
+    ].filter(d => d.value > 0); // Só exibe fatias com valor
+
+    // 3. DADOS PRO GRÁFICO DE BARRAS (Histórico do Cliente)
+    // Agrupa os dados de TODOS os meses do cliente selecionado
+    const historicoMensal = [];
+    if (visaoAtual !== 'consolidada') {
+      const mesesDoCliente = [...new Set(dados.map(l => l.mes_referencia))].sort();
+      mesesDoCliente.forEach(mes => {
+        const lancamentosDoMes = dados.filter(l => l.mes_referencia === mes);
+        const faturamento = lancamentosDoMes.reduce((acc, curr) => acc + Number(curr.vendas_cartao) + Number(curr.vendas_pix_dinheiro), 0);
+        
+        let lucro = 0;
+        lancamentosDoMes.forEach(l => {
+          const recLiquida = (Number(l.vendas_cartao) + Number(l.vendas_pix_dinheiro)) - Number(l.taxas_maquininha) - Number(l.impostos_vendas);
+          lucro += recLiquida - Number(l.custo_mercadorias) - Number(l.despesas_ponto) - Number(l.folha_pagamento) - Number(l.despesas_gerais) - Number(l.impostos_ir_csll) - Number(l.pro_labore);
+        });
+
+        historicoMensal.push({
+          mes: mes.substring(5,7) + '/' + mes.substring(2,4), // Ex: 08/26
+          Faturamento: faturamento,
+          Lucro: lucro
+        });
+      });
+    }
+
     return {
       dadosDRE: soma,
+      dadosRaioX,
+      historicoMensal,
       cards: {
         faturamentoBruto: formatCurrency(soma.receitaBruta),
+        custosVariaveis: formatCurrency(soma.totalDeducoes + soma.totalCustos),
+        custosFixos: formatCurrency(soma.totalDespesasOp),
         lucroBruto: formatCurrency(soma.lucroBruto),
         lucroLiquido: formatCurrency(soma.lucroLiquido),
         margemLiquida: `${margemLiquida.toFixed(1)}%`,
-        pesoTaxas: `${pesoTaxas.toFixed(1)}%`,
         pontoEquilibrio: formatCurrency(pontoEquilibrio)
       }
     };
@@ -110,6 +158,9 @@ export function DashboardGestor() {
 
   const metricas = calcularMetricas();
 
+  // ==========================================
+  // HANDLERS
+  // ==========================================
   const abrirModalEditarCliente = () => {
     const cliente = clientes.find(c => c.id === visaoAtual);
     if (cliente) {
@@ -157,7 +208,20 @@ export function DashboardGestor() {
     return cliente ? cliente.nome_loja_ml : 'Loja Desconhecida';
   };
 
-  const lancamentoModalAtual = lancamentos.find(l => l.cliente_id === visaoAtual) || null;
+  // Lógica do Botão de Lançar/Editar
+  const btnDreText = mesFiltro !== 'todos' ? `✏️ Editar DRE (${mesFiltro})` : '💵 Lançar Novo DRE';
+  // O modal vai puxar o lançamento especificamente do mes selecionado (se houver)
+  const lancamentoModalAtual = (mesFiltro !== 'todos' && visaoAtual !== 'consolidada') 
+    ? (lancamentos.find(l => l.cliente_id === visaoAtual && l.mes_referencia === mesFiltro) || null)
+    : null;
+
+  const abrirModalDre = () => {
+    if (visaoAtual === 'consolidada') {
+      alert('Selecione uma loja específica para lançar o DRE.');
+      return;
+    }
+    setIsDreModalOpen(true);
+  };
 
   return (
     <div className="dashboard-container">
@@ -165,26 +229,32 @@ export function DashboardGestor() {
         <div>
           <div className="header-title-row">
             <h1 className="page-title">
-              {visaoAtual === 'consolidada' ? 'Visão Consolidada (Carteira)' : getClientNameById(visaoAtual)}
+              {visaoAtual === 'consolidada' ? 'Visão Consolidada' : getClientNameById(visaoAtual)}
             </h1>
+            
             <select className="view-selector" value={visaoAtual} onChange={(e) => setVisaoAtual(e.target.value)}>
-              <option value="consolidada">Todos os Estabelecimentos</option>
+              <option value="consolidada">Todas as Lojas</option>
               {clientes.map(cliente => (
                 <option key={cliente.id} value={cliente.id}>{cliente.nome_loja_ml}</option>
               ))}
             </select>
+
+            <select className="view-selector" value={mesFiltro} onChange={(e) => setMesFiltro(e.target.value)} style={{ marginLeft: '8px' }}>
+              <option value="todos">Todos os Meses (Soma)</option>
+              {mesesDisponiveis.map(mes => (
+                <option key={mes} value={mes}>{mes}</option>
+              ))}
+            </select>
           </div>
           <p className="text-secondary">
-            {visaoAtual === 'consolidada' 
-              ? 'Análise da carteira de Lojas Físicas'
-              : `Resultados do estabelecimento ${getClientNameById(visaoAtual)}`}
+            Métricas calculadas com base no período selecionado.
           </p>
         </div>
         <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {visaoAtual !== 'consolidada' && (
             <>
-              <button className="btn-secondary" onClick={() => setIsDreModalOpen(true)} style={{ backgroundColor: 'var(--accent-green)', color: '#fff', border: 'none' }}>
-                💵 Lançar DRE do Mês
+              <button className="btn-secondary" onClick={abrirModalDre} style={{ backgroundColor: 'var(--accent-green)', color: '#fff', border: 'none' }}>
+                {btnDreText}
               </button>
               <button className="btn-secondary" onClick={abrirModalEditarCliente}>
                 ✏️ Editar Loja
@@ -198,12 +268,60 @@ export function DashboardGestor() {
       </header>
 
       <div className="metrics-grid">
-        <MetricCard title="Vendas Totais" value={metricas.cards.faturamentoBruto} subtitle="Soma de todos os meios" icon="💰" />
-        <MetricCard title="Impacto das Taxas (MDR)" value={metricas.cards.pesoTaxas} subtitle="Da Receita Bruta vai para Adquirentes" icon="💳" />
-        <MetricCard title="Lucro Líquido Real" value={metricas.cards.lucroLiquido} subtitle={`Margem Final: ${metricas.cards.margemLiquida}`} icon="💎" />
-        <MetricCard title="Ponto de Equilíbrio" value={metricas.cards.pontoEquilibrio} subtitle="Meta para pagar aluguel e equipe" icon="⚖️" />
+        <MetricCard title="Vendas Totais" value={metricas.cards.faturamentoBruto} subtitle="Receita Bruta" icon="💰" />
+        <MetricCard title="Custos Variáveis" value={metricas.cards.custosVariaveis} subtitle="Taxas + Impostos + CMV" icon="📉" />
+        <MetricCard title="Custos Fixos" value={metricas.cards.custosFixos} subtitle="Operação da Loja" icon="🏢" />
+        <MetricCard title="Lucro Bruto" value={metricas.cards.lucroBruto} subtitle="Antes dos custos fixos" icon="📊" />
+        <MetricCard title="Ponto de Equilíbrio" value={metricas.cards.pontoEquilibrio} subtitle="Meta Mínima" icon="⚖️" />
+        <MetricCard title="Lucro Líquido Final" value={metricas.cards.lucroLiquido} subtitle={`Margem: ${metricas.cards.margemLiquida}`} icon="💎" />
       </div>
 
+      {/* ABA DE GRÁFICOS BI (Só aparece para lojas específicas) */}
+      {visaoAtual !== 'consolidada' && metricas.historicoMensal.length > 0 && (
+        <div className="charts-section">
+          <div className="charts-row">
+            
+            {/* Gráfico 1: Raio X */}
+            <div className="chart-card glass-panel">
+              <h3 className="chart-title">Raio-X de Custos ({mesFiltro === 'todos' ? 'Acumulado' : mesFiltro})</h3>
+              <div className="chart-wrapper">
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie data={metricas.dadosRaioX} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value">
+                      {metricas.dadosRaioX.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => formatCurrency(value)} contentStyle={{ backgroundColor: 'var(--bg-secondary)', border: 'none', borderRadius: '8px', color: '#fff' }} />
+                    <Legend verticalAlign="bottom" height={36}/>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Gráfico 2: Evolução */}
+            <div className="chart-card glass-panel">
+              <h3 className="chart-title">Evolução de Lucro vs Receita</h3>
+              <div className="chart-wrapper">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={metricas.historicoMensal} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                    <XAxis dataKey="mes" stroke="var(--text-secondary)" tick={{fill: 'var(--text-secondary)'}} axisLine={false} tickLine={false} />
+                    <YAxis stroke="var(--text-secondary)" tick={{fill: 'var(--text-secondary)'}} axisLine={false} tickLine={false} tickFormatter={(value) => `R$ ${value/1000}k`} />
+                    <Tooltip formatter={(value) => formatCurrency(value)} contentStyle={{ backgroundColor: 'var(--bg-secondary)', border: 'none', borderRadius: '8px', color: '#fff' }} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
+                    <Legend />
+                    <Bar dataKey="Faturamento" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Lucro" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* TABELA DRE */}
       <div className="charts-section">
         <DreTable dados={metricas.dadosDRE} />
       </div>
