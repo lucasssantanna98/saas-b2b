@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { MetricCard } from '../../components/dashboard/MetricCard';
 import { Modal } from '../../components/common/Modal';
-import { DreTable } from '../../components/dashboard/DreTable';
-import { DreModal } from '../../components/dashboard/DreModal';
-import { supabase } from '../../services/supabase';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts';
+import ReactMarkdown from 'react-markdown';
+import { gerarConsultoriaCFO } from '../../services/ai';
 import './DashboardGestor.css';
 
 const formatCurrency = (value) => {
@@ -29,6 +28,11 @@ export function DashboardGestor() {
 
   // States: Modal DRE Completo
   const [isDreModalOpen, setIsDreModalOpen] = useState(false);
+
+  // States: IA CFO
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResponse, setAiResponse] = useState(null);
+  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
   useEffect(() => {
     fetchClientes();
@@ -253,6 +257,23 @@ export function DashboardGestor() {
     setIsDreModalOpen(true);
   };
 
+  const handleGerarConsultoria = async () => {
+    if (!geminiKey) {
+      alert("Aviso: Chave VITE_GEMINI_API_KEY não configurada no arquivo .env.local!");
+      return;
+    }
+    setAiLoading(true);
+    setAiResponse(null);
+    try {
+      const response = await gerarConsultoriaCFO(metricas.dadosDRE, geminiKey);
+      setAiResponse(response);
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px', marginBottom: '32px' }}>
@@ -369,6 +390,26 @@ export function DashboardGestor() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+          </div>
+
+          {/* Seção IA - CFO Virtual */}
+          <div className="chart-card glass-panel" style={{ marginTop: '24px', border: '1px solid #8b5cf6' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '16px' }}>
+              <h3 className="chart-title" style={{ color: '#8b5cf6', margin: 0 }}>🤖 Consultoria Financeira com IA (CFO Virtual)</h3>
+              <button className="custom-btn" onClick={handleGerarConsultoria} disabled={aiLoading || metricas.dadosDRE.receitaBruta === 0} style={{ backgroundColor: '#8b5cf6', color: '#fff' }}>
+                {aiLoading ? 'Analisando números...' : 'Gerar Relatório'}
+              </button>
+            </div>
+            
+            {aiResponse && (
+              <div style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '24px', borderRadius: '8px', lineHeight: '1.6', fontSize: '0.95rem' }}>
+                <ReactMarkdown>{aiResponse}</ReactMarkdown>
+              </div>
+            )}
+            
+            {!aiResponse && !aiLoading && (
+              <p className="text-secondary" style={{fontSize: '0.95rem'}}>Clique no botão acima para que nossa Inteligência Artificial analise a saúde financeira da loja, avalie o impacto das taxas de maquininha atuais e crie um plano de ação automatizado.</p>
+            )}
           </div>
 
         </div>
