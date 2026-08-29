@@ -89,28 +89,28 @@ export function DreModal({ isOpen, onClose, clienteId, lancamentoAtual, onSalvar
         </div>
 
         <Section title="1. Receita Bruta (Meios de Pagamento)" color="blue">
-          <div><label>Vendas Cartão (Onde a Maquininha atua)</label><input type="text" className="form-input" value={receitas.cartao} onChange={e => setReceitas({...receitas, cartao: e.target.value})} /></div>
-          <div><label>Vendas PIX / Dinheiro</label><input type="text" className="form-input" value={receitas.pix_dinheiro} onChange={e => setReceitas({...receitas, pix_dinheiro: e.target.value})} /></div>
+          <div><label>Vendas Cartão (Onde a Maquininha atua)</label><input type="text" className="form-input" placeholder="R$ 50.000,00" value={receitas.cartao} onChange={e => setReceitas({...receitas, cartao: e.target.value})} /></div>
+          <div><label>Vendas PIX / Dinheiro</label><input type="text" className="form-input" placeholder="R$ 15.000,00" value={receitas.pix_dinheiro} onChange={e => setReceitas({...receitas, pix_dinheiro: e.target.value})} /></div>
         </Section>
 
         <Section title="2. Deduções (A Dor do Lojista)" color="danger">
-          <div><label>Taxas da Maquininha (MDR)</label><input type="text" className="form-input" value={deducoes.taxas_maquininha} onChange={e => setDeducoes({...deducoes, taxas_maquininha: e.target.value})} /></div>
-          <div><label>Impostos (Simples Nacional / ICMS)</label><input type="text" className="form-input" value={deducoes.impostos_vendas} onChange={e => setDeducoes({...deducoes, impostos_vendas: e.target.value})} /></div>
+          <div><label>Taxas da Maquininha em Reais</label><input type="text" className="form-input" placeholder="R$ 1.500,00" value={deducoes.taxas_maquininha} onChange={e => setDeducoes({...deducoes, taxas_maquininha: e.target.value})} /></div>
+          <div><label>Impostos (Simples Nacional / ICMS)</label><input type="text" className="form-input" placeholder="R$ 3.000,00" value={deducoes.impostos_vendas} onChange={e => setDeducoes({...deducoes, impostos_vendas: e.target.value})} /></div>
         </Section>
 
         <Section title="3. Custos Diretos (CMV)" color="danger">
-          <div><label>Custo das Mercadorias / Insumos</label><input type="text" className="form-input" value={custos.mercadorias} onChange={e => setCustos({...custos, mercadorias: e.target.value})} /></div>
+          <div><label>Custo das Mercadorias / Insumos</label><input type="text" className="form-input" placeholder="R$ 15.000,00" value={custos.mercadorias} onChange={e => setCustos({...custos, mercadorias: e.target.value})} /></div>
         </Section>
 
         <Section title="4. Despesas Operacionais (Ponto Físico)" color="danger">
-          <div><label>Aluguel, Água, Luz, Internet</label><input type="text" className="form-input" value={despesas.ponto} onChange={e => setDespesas({...despesas, ponto: e.target.value})} /></div>
-          <div><label>Folha de Pagamento (Funcionários)</label><input type="text" className="form-input" value={despesas.folha} onChange={e => setDespesas({...despesas, folha: e.target.value})} /></div>
-          <div><label>Despesas Gerais (Manutenção, Contador)</label><input type="text" className="form-input" value={despesas.gerais} onChange={e => setDespesas({...despesas, gerais: e.target.value})} /></div>
+          <div><label>Aluguel, Água, Luz, Internet</label><input type="text" className="form-input" placeholder="R$ 4.500,00" value={despesas.ponto} onChange={e => setDespesas({...despesas, ponto: e.target.value})} /></div>
+          <div><label>Folha de Pagamento (Funcionários)</label><input type="text" className="form-input" placeholder="R$ 8.000,00" value={despesas.folha} onChange={e => setDespesas({...despesas, folha: e.target.value})} /></div>
+          <div><label>Despesas Gerais (Manutenção, Contador)</label><input type="text" className="form-input" placeholder="R$ 1.200,00" value={despesas.gerais} onChange={e => setDespesas({...despesas, gerais: e.target.value})} /></div>
         </Section>
 
         <Section title="5. Provisões e Retiradas" color="purple">
-          <div><label>Pró-Labore (Retirada dos Sócios)</label><input type="text" className="form-input" value={outros.pro_labore} onChange={e => setOutros({...outros, pro_labore: e.target.value})} /></div>
-          <div><label>Provisão IR / CSLL</label><input type="text" className="form-input" value={outros.impostos_ir} onChange={e => setOutros({...outros, impostos_ir: e.target.value})} /></div>
+          <div><label>Pró-Labore (Retirada dos Sócios)</label><input type="text" className="form-input" placeholder="R$ 5.000,00" value={outros.pro_labore} onChange={e => setOutros({...outros, pro_labore: e.target.value})} /></div>
+          <div><label>Provisão IR / CSLL</label><input type="text" className="form-input" placeholder="R$ 0,00" value={outros.impostos_ir} onChange={e => setOutros({...outros, impostos_ir: e.target.value})} /></div>
         </Section>
 
         <div className="form-actions">
