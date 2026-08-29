@@ -225,43 +225,44 @@ export function DashboardGestor() {
 
   return (
     <div className="dashboard-container">
-      <header className="dashboard-header">
-        <div>
-          <div className="header-title-row">
-            <h1 className="page-title">
-              {visaoAtual === 'consolidada' ? 'Visão Consolidada' : getClientNameById(visaoAtual)}
-            </h1>
-            
-            <select className="view-selector" value={visaoAtual} onChange={(e) => setVisaoAtual(e.target.value)}>
-              <option value="consolidada">Todas as Lojas</option>
+      <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px', marginBottom: '32px' }}>
+        <div style={{ flex: 1 }}>
+          <h1 className="page-title" style={{ margin: 0, fontSize: '2rem' }}>
+            {visaoAtual === 'consolidada' ? 'Visão Consolidada' : getClientNameById(visaoAtual)}
+          </h1>
+          <p className="text-secondary" style={{ marginTop: '8px' }}>
+            Métricas calculadas com base no período selecionado.
+          </p>
+
+          <div className="filters-container">
+            <select className="custom-select" value={visaoAtual} onChange={(e) => setVisaoAtual(e.target.value)}>
+              <option value="consolidada">🏢 Todas as Lojas (Consolidado)</option>
               {clientes.map(cliente => (
-                <option key={cliente.id} value={cliente.id}>{cliente.nome_loja_ml}</option>
+                <option key={cliente.id} value={cliente.id}>🏪 {cliente.nome_loja_ml}</option>
               ))}
             </select>
 
-            <select className="view-selector" value={mesFiltro} onChange={(e) => setMesFiltro(e.target.value)} style={{ marginLeft: '8px' }}>
-              <option value="todos">Todos os Meses (Soma)</option>
+            <select className="custom-select" value={mesFiltro} onChange={(e) => setMesFiltro(e.target.value)}>
+              <option value="todos">📅 Todos os Meses (Soma)</option>
               {mesesDisponiveis.map(mes => (
-                <option key={mes} value={mes}>{mes}</option>
+                <option key={mes} value={mes}>📅 {mes}</option>
               ))}
             </select>
           </div>
-          <p className="text-secondary">
-            Métricas calculadas com base no período selecionado.
-          </p>
         </div>
-        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+
+        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '16px' }}>
           {visaoAtual !== 'consolidada' && (
             <>
-              <button className="btn-secondary" onClick={abrirModalDre} style={{ backgroundColor: 'var(--accent-green)', color: '#fff', border: 'none' }}>
+              <button className="custom-btn" onClick={abrirModalDre} style={{ backgroundColor: 'var(--accent-green, #10b981)', color: '#fff' }}>
                 {btnDreText}
               </button>
-              <button className="btn-secondary" onClick={abrirModalEditarCliente}>
+              <button className="custom-btn" onClick={abrirModalEditarCliente} style={{ backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff' }}>
                 ✏️ Editar Loja
               </button>
             </>
           )}
-          <button className="btn-primary" onClick={abrirModalNovoCliente}>
+          <button className="custom-btn" onClick={abrirModalNovoCliente} style={{ backgroundColor: 'var(--accent-blue, #3b82f6)', color: '#fff' }}>
             + Novo Estabelecimento
           </button>
         </div>
