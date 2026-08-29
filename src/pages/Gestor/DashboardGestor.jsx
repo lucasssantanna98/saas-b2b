@@ -19,6 +19,7 @@ export function DashboardGestor() {
   const [visaoAtual, setVisaoAtual] = useState('consolidada'); 
   const [clientes, setClientes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [editandoClienteId, setEditandoClienteId] = useState(null);
 
   // Form states
   const [razaoSocial, setRazaoSocial] = useState('');
@@ -44,41 +45,73 @@ export function DashboardGestor() {
     }
   };
 
+  const abrirModalNovo = () => {
+    setEditandoClienteId(null);
+    setRazaoSocial('');
+    setNomeLoja('');
+    setCnpj('');
+    setIsClientModalOpen(true);
+  };
+
+  const abrirModalEditar = () => {
+    const cliente = clientes.find(c => c.id === visaoAtual);
+    if (cliente) {
+      setEditandoClienteId(cliente.id);
+      setRazaoSocial(cliente.razao_social);
+      setNomeLoja(cliente.nome_loja_ml);
+      setCnpj(cliente.cnpj);
+      setIsClientModalOpen(true);
+    }
+  };
+
   const handleSalvarCliente = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const novoCliente = {
+      const payload = {
         razao_social: razaoSocial,
         nome_loja_ml: nomeLoja,
         cnpj: cnpj,
         status: 'ativo'
       };
 
-      const { data, error } = await supabase
-        .from('clientes')
-        .insert([novoCliente])
-        .select();
+      if (editandoClienteId) {
+        // Modo Edição
+        const { error } = await supabase
+          .from('clientes')
+          .update(payload)
+          .eq('id', editandoClienteId);
 
-      if (error) throw error;
+        if (error) throw error;
+        alert('Dados do cliente atualizados com sucesso!');
+        
+        // Atualiza a lista na tela sem precisar recarregar
+        const clientesAtualizados = clientes.map(c => 
+          c.id === editandoClienteId ? { ...c, ...payload } : c
+        );
+        setClientes(clientesAtualizados);
 
-      alert('Cliente salvo com sucesso!');
-      
-      // Atualiza a lista na tela
-      if (data && data.length > 0) {
-        setClientes([data[0], ...clientes]);
-        setVisaoAtual(data[0].id); // Muda a visão para o cliente recém criado
+      } else {
+        // Modo Criação
+        const { data, error } = await supabase
+          .from('clientes')
+          .insert([payload])
+          .select();
+
+        if (error) throw error;
+        alert('Cliente salvo com sucesso!');
+        
+        if (data && data.length > 0) {
+          setClientes([data[0], ...clientes]);
+          setVisaoAtual(data[0].id); // Muda a visão para o cliente recém criado
+        }
       }
 
-      // Limpa e fecha o modal
-      setRazaoSocial('');
-      setNomeLoja('');
-      setCnpj('');
       setIsClientModalOpen(false);
     } catch (error) {
       console.error('Erro ao salvar cliente:', error.message);
-      alert('Erro ao salvar cliente. Você já rodou o script SQL no Supabase?');
+      alert('Erro ao salvar cliente. Verifique se o banco de dados está online.');
     } finally {
       setIsLoading(false);
     }
@@ -116,8 +149,17 @@ export function DashboardGestor() {
               : `Analisando os resultados individuais de ${getClientNameById(visaoAtual)}`}
           </p>
         </div>
-        <div className="header-actions">
-          <button className="btn-primary" onClick={() => setIsClientModalOpen(true)}>
+        <div className="header-actions" style={{ display: 'flex', alignItems: 'center' }}>
+          {visaoAtual !== 'consolidada' && (
+            <button 
+              className="btn-secondary" 
+              style={{ marginRight: '16px' }} 
+              onClick={abrirModalEditar}
+            >
+              ✏️ Editar Cliente
+            </button>
+          )}
+          <button className="btn-primary" onClick={abrirModalNovo}>
             + Novo Cliente
           </button>
         </div>
@@ -221,11 +263,11 @@ export function DashboardGestor() {
         </div>
       </div>
 
-      {/* Modal de Novo Cliente */}
+      {/* Modal de Formulário (Criação ou Edição) */}
       <Modal 
         isOpen={isClientModalOpen} 
         onClose={() => setIsClientModalOpen(false)}
-        title="Cadastrar Novo Cliente"
+        title={editandoClienteId ? "Editar Cliente" : "Cadastrar Novo Cliente"}
       >
         <form onSubmit={handleSalvarCliente}>
           <div className="form-group">
@@ -267,7 +309,7 @@ export function DashboardGestor() {
               Cancelar
             </button>
             <button type="submit" className="btn-primary" disabled={isLoading}>
-              {isLoading ? 'Salvando...' : 'Salvar Cliente'}
+              {isLoading ? 'Salvando...' : 'Salvar Alterações'}
             </button>
           </div>
         </form>
