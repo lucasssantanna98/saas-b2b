@@ -4,7 +4,7 @@ import { Modal } from '../../components/common/Modal';
 import { DreTable } from '../../components/dashboard/DreTable';
 import { DreModal } from '../../components/dashboard/DreModal';
 import { supabase } from '../../services/supabase';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts';
 import './DashboardGestor.css';
 
 const formatCurrency = (value) => {
@@ -104,9 +104,18 @@ export function DashboardGestor() {
     let margemLiquida = 0;
     if (soma.receitaBruta > 0) margemLiquida = (soma.lucroLiquido / soma.receitaBruta) * 100;
 
-    const margemContribuicao = soma.receitaLiquida - soma.totalCustos;
-    let mcPercentual = soma.receitaLiquida > 0 ? (margemContribuicao / soma.receitaLiquida) : 0;
-    let pontoEquilibrio = mcPercentual > 0 ? (soma.totalDespesasOp / mcPercentual) : 0;
+    // A Fórmula correta do Ponto de Equilíbrio (PE) sobre o Faturamento Bruto:
+    // 1. Custos Variáveis = Deduções (Taxas, Impostos) + CMV
+    const custosVariaveisTotais = soma.totalDeducoes + soma.totalCustos;
+    
+    // 2. Margem de Contribuição (R$) = Receita Bruta - Custos Variáveis
+    const margemContribuicao = soma.receitaBruta - custosVariaveisTotais;
+    
+    // 3. Índice da Margem de Contribuição (IMC) = MC / Receita Bruta
+    let imc = soma.receitaBruta > 0 ? (margemContribuicao / soma.receitaBruta) : 0;
+    
+    // 4. Ponto de Equilíbrio = Custos Fixos Totais / IMC
+    let pontoEquilibrio = imc > 0 ? (soma.totalDespesasOp / imc) : 0;
 
     // 2. DADOS PRO GRÁFICO DE PIZZA (Raio-X de Custos)
     const dadosRaioX = [
@@ -115,10 +124,9 @@ export function DashboardGestor() {
       { name: 'Custo Mercadoria', value: soma.totalCustos },
       { name: 'Despesas Fixas', value: soma.totalDespesasOp },
       { name: 'Pró-Labore e IR', value: soma.totalProvisoes },
-    ].filter(d => d.value > 0); // Só exibe fatias com valor
+    ].filter(d => d.value > 0); 
 
     // 3. DADOS PRO GRÁFICO DE BARRAS (Histórico do Cliente)
-    // Agrupa os dados de TODOS os meses do cliente selecionado
     const historicoMensal = [];
     if (visaoAtual !== 'consolidada') {
       const mesesDoCliente = [...new Set(dados.map(l => l.mes_referencia))].sort();
@@ -133,17 +141,39 @@ export function DashboardGestor() {
         });
 
         historicoMensal.push({
-          mes: mes.substring(5,7) + '/' + mes.substring(2,4), // Ex: 08/26
+          mes: mes.substring(5,7) + '/' + mes.substring(2,4),
           Faturamento: faturamento,
           Lucro: lucro
         });
       });
     }
 
+    // 4. DADOS PRO GRÁFICO DE PONTO DE EQUILÍBRIO (Intersecção)
+    const dadosPontoEquilibrio = [];
+    if (soma.receitaBruta > 0 && pontoEquilibrio > 0) {
+      // Cria uma escala do faturamento (do 0 até 20% acima do atual ou do PE)
+      const maxFaturamento = Math.max(soma.receitaBruta, pontoEquilibrio) * 1.2;
+      const step = maxFaturamento / 10; // 10 pontos na linha
+      
+      const percCV = custosVariaveisTotais / soma.receitaBruta; // % de Custo Variável
+      
+      for (let i = 0; i <= 10; i++) {
+        const xFaturamento = i * step;
+        const yCustoTotal = soma.totalDespesasOp + (xFaturamento * percCV); // Custo Fixo + (Faturamento * %)
+        
+        dadosPontoEquilibrio.push({
+          nome: formatCurrency(xFaturamento).replace(',00', ''), // Omit decimals for compact x-axis
+          FaturamentoBruto: xFaturamento,
+          CustosTotais: yCustoTotal
+        });
+      }
+    }
+
     return {
       dadosDRE: soma,
       dadosRaioX,
       historicoMensal,
+      dadosPontoEquilibrio,
       cards: {
         faturamentoBruto: formatCurrency(soma.receitaBruta),
         custosVariaveis: formatCurrency(soma.totalDeducoes + soma.totalCustos),
@@ -319,6 +349,28 @@ export function DashboardGestor() {
             </div>
 
           </div>
+
+          {/* Gráfico 3: Ponto de Equilíbrio */}
+          <div className="chart-card glass-panel" style={{ marginTop: '24px' }}>
+            <h3 className="chart-title">Análise do Ponto de Equilíbrio (Break-Even)</h3>
+            <p className="text-secondary" style={{ marginBottom: '16px', fontSize: '0.9rem' }}>
+              Ponto exato (cruzamento das linhas) onde o lucro cobre as despesas fixas.
+            </p>
+            <div className="chart-wrapper">
+              <ResponsiveContainer width="100%" height={350}>
+                <LineChart data={metricas.dadosPontoEquilibrio} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                  <XAxis dataKey="nome" stroke="var(--text-secondary)" tick={{fill: 'var(--text-secondary)', fontSize: 12}} />
+                  <YAxis stroke="var(--text-secondary)" tick={{fill: 'var(--text-secondary)', fontSize: 12}} tickFormatter={(val) => `R$ ${val/1000}k`} />
+                  <Tooltip formatter={(value) => formatCurrency(value)} contentStyle={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }} />
+                  <Legend verticalAlign="top" height={36}/>
+                  <Line type="monotone" dataKey="FaturamentoBruto" name="Faturamento (Receita)" stroke="#10b981" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="CustosTotais" name="Custos Totais (Fixo + Variável)" stroke="#ef4444" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
         </div>
       )}
 
