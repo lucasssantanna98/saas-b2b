@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MetricCard } from '../../components/dashboard/MetricCard';
+import { Modal } from '../../components/common/Modal';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import './DashboardGestor.css';
 
@@ -13,30 +14,58 @@ const dreData = [
 ];
 
 export function DashboardGestor() {
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [visaoAtual, setVisaoAtual] = useState('consolidada'); // 'consolidada' ou id do cliente
+
+  const handleSalvarCliente = (e) => {
+    e.preventDefault();
+    // Aqui no futuro chamaremos o Supabase
+    alert('Cliente salvo com sucesso! (Integração com BD em breve)');
+    setIsClientModalOpen(false);
+  };
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
         <div>
-          <h1 className="page-title">Visão Consolidada</h1>
-          <p className="text-secondary">Acompanhamento financeiro de todas as lojas - Junho</p>
+          <div className="header-title-row">
+            <h1 className="page-title">
+              {visaoAtual === 'consolidada' ? 'Visão Consolidada' : 'Visão do Lojista'}
+            </h1>
+            <select 
+              className="view-selector" 
+              value={visaoAtual} 
+              onChange={(e) => setVisaoAtual(e.target.value)}
+            >
+              <option value="consolidada">Todas as Lojas (Consolidado)</option>
+              <option value="loja1">Loja Exemplo (Mercado Livre)</option>
+            </select>
+          </div>
+          <p className="text-secondary">
+            {visaoAtual === 'consolidada' 
+              ? 'Acompanhamento financeiro de todas as lojas - Junho'
+              : 'Analisando os resultados individuais da Loja Exemplo'}
+          </p>
         </div>
         <div className="header-actions">
-          <button className="btn-primary">+ Novo Cliente</button>
+          <button className="btn-primary" onClick={() => setIsClientModalOpen(true)}>
+            + Novo Cliente
+          </button>
         </div>
       </header>
 
       <div className="metrics-grid">
         <MetricCard 
           title="Faturamento Bruto" 
-          value="R$ 75.000,00" 
+          value={visaoAtual === 'consolidada' ? "R$ 75.000,00" : "R$ 15.000,00"} 
           trend="up" 
-          trendValue="12.5%" 
+          trendValue={visaoAtual === 'consolidada' ? "12.5%" : "5.0%"} 
           subtitle="vs mês anterior" 
           icon="💰" 
         />
         <MetricCard 
           title="Margem de Contribuição" 
-          value="35.2%" 
+          value={visaoAtual === 'consolidada' ? "35.2%" : "42.1%"} 
           trend="up" 
           trendValue="2.1%" 
           subtitle="vs mês anterior" 
@@ -44,8 +73,8 @@ export function DashboardGestor() {
         />
         <MetricCard 
           title="Ponto de Equilíbrio" 
-          value="R$ 22.450,00" 
-          subtitle="Custo fixo consolidado coberto" 
+          value={visaoAtual === 'consolidada' ? "R$ 22.450,00" : "R$ 4.200,00"} 
+          subtitle="Custo fixo coberto" 
           icon="⚖️" 
         />
         <MetricCard 
@@ -122,6 +151,38 @@ export function DashboardGestor() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Novo Cliente */}
+      <Modal 
+        isOpen={isClientModalOpen} 
+        onClose={() => setIsClientModalOpen(false)}
+        title="Cadastrar Novo Cliente"
+      >
+        <form onSubmit={handleSalvarCliente}>
+          <div className="form-group">
+            <label>Razão Social</label>
+            <input type="text" className="form-input" placeholder="Ex: Empresa Silva LTDA" required />
+          </div>
+          <div className="form-group">
+            <label>Nome da Loja (Mercado Livre)</label>
+            <input type="text" className="form-input" placeholder="Ex: SILVA SHOP" required />
+          </div>
+          <div className="form-group">
+            <label>CNPJ</label>
+            <input type="text" className="form-input" placeholder="00.000.000/0001-00" required />
+          </div>
+          
+          <div className="form-actions">
+            <button type="button" className="btn-secondary" onClick={() => setIsClientModalOpen(false)}>
+              Cancelar
+            </button>
+            <button type="submit" className="btn-primary">
+              Salvar Cliente
+            </button>
+          </div>
+        </form>
+      </Modal>
+
     </div>
   );
 }
