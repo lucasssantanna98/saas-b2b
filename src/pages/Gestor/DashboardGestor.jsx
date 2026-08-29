@@ -174,12 +174,12 @@ export function DashboardGestor() {
       const payload = {
         cliente_id: visaoAtual,
         mes_referencia: mesReferencia,
-        faturamento_bruto: Number(faturamentoBruto),
-        devolucoes: Number(devolucoes),
-        taxas_ml: Number(taxasMl),
-        cmv: Number(cmv),
-        custos_fixos: Number(custosFixos),
-        custos_variaveis: Number(custosVariaveis)
+        faturamento_bruto: Number(String(faturamentoBruto).replace(',', '.')),
+        devolucoes: Number(String(devolucoes).replace(',', '.')),
+        taxas_ml: Number(String(taxasMl).replace(',', '.')),
+        cmv: Number(String(cmv).replace(',', '.')),
+        custos_fixos: Number(String(custosFixos).replace(',', '.')),
+        custos_variaveis: Number(String(custosVariaveis).replace(',', '.'))
       };
 
       // Tenta deletar o existente para o mesmo mes pra simplificar update e insere novo
