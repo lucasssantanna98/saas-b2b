@@ -287,15 +287,15 @@ export function DashboardGestor() {
     }
   };
 
-  return (
+return (
     <div className="dashboard-container" ref={printRef}>
       <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px', marginBottom: '32px' }}>
         <div style={{ flex: 1 }}>
           <h1 className="page-title" style={{ margin: 0, fontSize: '2rem' }}>
-            {visaoAtual === 'consolidada' ? 'Visão Consolidada' : getClientNameById(visaoAtual)}
+            Visão geral
           </h1>
-          <p className="text-secondary" style={{ marginTop: '8px' }}>
-            Métricas calculadas com base no período selecionado.
+          <p className="page-subtitle" style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>
+            Resumo do período, principais indicadores e ações que precisam da sua atenção.
           </p>
 
           <div className="filters-container">

@@ -1,0 +1,23 @@
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-primary, #0f172a);
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 260px; /* Mesma largura do Sidebar */
+  padding: 32px 40px;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    padding: 16px;
+  }
+  
+  .sidebar {
+    transform: translateX(-100%);
+  }
+}

@@ -1,12 +1,30 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { DashboardGestor } from './pages/Gestor/DashboardGestor';
+import { Login } from './pages/Auth/Login';
+import { AppLayout } from './components/layout/AppLayout';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<DashboardGestor />} />
+        <Route path="/login" element={<Login />} />
+        
+        {/* Rotas Protegidas com Layout Corporativo */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <AppLayout>
+              <DashboardGestor />
+            </AppLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard" element={<Navigate to="/" replace />} />
+        
+        {/* Futuras telas do Sidebar apontam temporariamente para o Dashboard */}
+        <Route path="/clientes" element={<Navigate to="/" replace />} />
+        <Route path="/dre" element={<Navigate to="/" replace />} />
+        <Route path="/relatorios" element={<Navigate to="/" replace />} />
+        <Route path="/configuracoes" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   )
