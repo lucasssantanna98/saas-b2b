@@ -54,6 +54,6 @@ INSTRUÇÕES DE FORMATAÇÃO:
     return response.text();
   } catch (error) {
     console.error("Erro no Gemini AI:", error);
-    throw new Error('A Inteligência Artificial não pôde analisar os dados no momento.');
+    throw new Error('Erro da IA do Google: ' + error.message);
   }
 };
