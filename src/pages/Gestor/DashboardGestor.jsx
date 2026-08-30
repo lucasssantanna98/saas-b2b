@@ -167,11 +167,13 @@ export function DashboardGestor() {
       for (let i = 0; i <= 10; i++) {
         const xFaturamento = i * step;
         const yCustoTotal = soma.totalDespesasOp + (xFaturamento * percCV); // Custo Fixo + (Faturamento * %)
+        const yMargemContribuicao = xFaturamento * imc; // Faturamento * Índice de Margem
         
         dadosPontoEquilibrio.push({
           nome: formatCurrency(xFaturamento).replace(',00', ''), // Omit decimals for compact x-axis
           FaturamentoBruto: xFaturamento,
-          CustosTotais: yCustoTotal
+          CustosTotais: yCustoTotal,
+          MargemContribuicao: yMargemContribuicao
         });
       }
     }
@@ -390,6 +392,7 @@ export function DashboardGestor() {
                   <Legend verticalAlign="top" height={36}/>
                   <Line type="monotone" dataKey="FaturamentoBruto" name="Faturamento (Receita)" stroke="#10b981" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
                   <Line type="monotone" dataKey="CustosTotais" name="Custos Totais (Fixo + Variável)" stroke="#ef4444" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="MargemContribuicao" name="Margem de Contribuição" stroke="#3b82f6" strokeWidth={3} strokeDasharray="5 5" dot={false} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
