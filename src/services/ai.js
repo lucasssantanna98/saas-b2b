@@ -16,8 +16,8 @@ export const gerarConsultoriaCFO = async (dadosDRE, apiKey) => {
     genAI = new GoogleGenerativeAI(apiKey);
   }
 
-  // Define o modelo. Estamos usando a versão "latest" para evitar erros de versão não encontrada
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+  // Define o modelo. Estamos usando a versão "gemini-pro" que é o modelo original mais amplamente distribuído globalmente
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
   // Calcula o impacto % das taxas de maquininha
   const impactoMDR = dadosDRE.receitaBruta > 0 
