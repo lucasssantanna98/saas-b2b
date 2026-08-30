@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MetricCard } from '../../components/dashboard/MetricCard';
 import { Modal } from '../../components/common/Modal';
 import { DreTable } from '../../components/dashboard/DreTable';
@@ -6,6 +6,7 @@ import { DreModal } from '../../components/dashboard/DreModal';
 import { supabase } from '../../services/supabase';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts';
 import ReactMarkdown from 'react-markdown';
+import { useReactToPrint } from 'react-to-print';
 import { gerarConsultoriaCFO } from '../../services/ai';
 import './DashboardGestor.css';
 
@@ -36,6 +37,13 @@ export function DashboardGestor() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState(null);
   const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+  // Ref para impressão de PDF
+  const printRef = useRef();
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+    documentTitle: 'Relatorio_Consultoria_SaaS',
+  });
 
   useEffect(() => {
     fetchClientes();
@@ -280,7 +288,7 @@ export function DashboardGestor() {
   };
 
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-container" ref={printRef}>
       <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px', marginBottom: '32px' }}>
         <div style={{ flex: 1 }}>
           <h1 className="page-title" style={{ margin: 0, fontSize: '2rem' }}>
@@ -320,6 +328,10 @@ export function DashboardGestor() {
           )}
           <button className="custom-btn" onClick={abrirModalNovoCliente} style={{ backgroundColor: 'var(--accent-blue, #3b82f6)', color: '#fff' }}>
             + Novo Estabelecimento
+          </button>
+          
+          <button className="custom-btn" onClick={handlePrint} style={{ backgroundColor: '#f59e0b', color: '#fff' }}>
+            📄 Gerar PDF Executivo
           </button>
         </div>
       </header>
@@ -399,7 +411,7 @@ export function DashboardGestor() {
           </div>
 
           {/* Seção IA - CFO Virtual */}
-          <div className="chart-card glass-panel" style={{ marginTop: '24px', border: '1px solid #8b5cf6' }}>
+          <div className="chart-card glass-panel ai-section-print" style={{ marginTop: '24px', border: '1px solid #8b5cf6' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '16px' }}>
               <h3 className="chart-title" style={{ color: '#8b5cf6', margin: 0 }}>🤖 Consultoria Financeira com IA (CFO Virtual)</h3>
               <button className="custom-btn" onClick={handleGerarConsultoria} disabled={aiLoading || metricas.dadosDRE.receitaBruta === 0} style={{ backgroundColor: '#8b5cf6', color: '#fff' }}>

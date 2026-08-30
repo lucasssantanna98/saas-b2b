@@ -111,3 +111,44 @@
 .custom-btn:active {
   transform: scale(0.97);
 }
+
+/* ========================================================== */
+/* ESTILOS DE IMPRESSÃO (PDF EXECUTIVO) */
+/* ========================================================== */
+@media print {
+  /* Força a cor de fundo escura e os elementos a manterem a cor */
+  body, .dashboard-container {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background-color: #0f172a !important;
+    color: white !important;
+  }
+  
+  /* Esconde todos os botões e áreas desnecessárias */
+  .header-actions,
+  .filters-container,
+  button,
+  .btn-primary,
+  .btn-secondary,
+  .custom-btn {
+    display: none !important;
+  }
+  
+  /* Ajusta o grid para impressão A4 e evitar quebra no meio do gráfico */
+  .chart-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  }
+
+  /* Remove margens e sombras excessivas para impressão mais limpa */
+  .dashboard-container {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  /* Forçar que a div de IA comece numa nova página se necessário */
+  .ai-section-print {
+    page-break-inside: avoid;
+  }
+}
