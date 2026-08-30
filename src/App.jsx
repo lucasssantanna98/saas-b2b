@@ -27,8 +27,15 @@ function App() {
             </AppLayout>
           </ProtectedRoute>
         } />
+
+        {/* Rotas legadas e em construção redirecionam para a home */}
+        <Route path="/dashboard" element={<Navigate to="/" replace />} />
+        <Route path="/clientes" element={<Navigate to="/" replace />} />
         <Route path="/relatorios" element={<Navigate to="/" replace />} />
         <Route path="/configuracoes" element={<Navigate to="/" replace />} />
+        
+        {/* Rota 404 (Fallback) */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   )
