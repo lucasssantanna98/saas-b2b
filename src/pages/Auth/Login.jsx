@@ -79,9 +79,6 @@ export const Login = () => {
             <button type="submit" className="btn-primary" disabled={loading} style={{ width: '100%', marginBottom: '12px', padding: '12px' }}>
               {loading ? 'Acessando...' : 'Entrar no Sistema'}
             </button>
-            <button type="button" onClick={handleSignUp} className="btn-secondary" disabled={loading} style={{ width: '100%', padding: '12px' }}>
-              Registrar Nova Conta
-            </button>
           </div>
         </form>
       </div>
