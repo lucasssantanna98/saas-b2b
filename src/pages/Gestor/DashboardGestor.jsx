@@ -233,7 +233,8 @@ export function DashboardGestor() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const payload = { razao_social: razaoSocial, nome_loja_ml: nomeLoja, cnpj, status: 'ativo' };
+      const { data: { user } } = await supabase.auth.getUser();
+      const payload = { razao_social: razaoSocial, nome_loja_ml: nomeLoja, cnpj, status: 'ativo', user_id: user?.id };
       if (editandoClienteId) {
         await supabase.from('clientes').update(payload).eq('id', editandoClienteId);
         setClientes(clientes.map(c => c.id === editandoClienteId ? { ...c, ...payload } : c));

@@ -49,9 +49,11 @@ export function DreModal({ isOpen, onClose, clienteId, lancamentoAtual, onSalvar
     setIsLoading(true);
     
     try {
+      const { data: { user } } = await supabase.auth.getUser();
       const payload = {
         cliente_id: clienteId,
         mes_referencia: mesReferencia,
+        user_id: user?.id,
         vendas_cartao: parseNum(receitas.cartao),
         vendas_pix_dinheiro: parseNum(receitas.pix_dinheiro),
         taxas_maquininha: parseNum(deducoes.taxas_maquininha),
