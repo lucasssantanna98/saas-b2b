@@ -3,6 +3,7 @@ import { DashboardGestor } from './pages/Gestor/DashboardGestor';
 import { Login } from './pages/Auth/Login';
 import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { DreComparativo } from './pages/Gestor/DreComparativo';
 
 function App() {
   return (
@@ -18,11 +19,14 @@ function App() {
             </AppLayout>
           </ProtectedRoute>
         } />
-        <Route path="/dashboard" element={<Navigate to="/" replace />} />
         
-        {/* Futuras telas do Sidebar apontam temporariamente para o Dashboard */}
-        <Route path="/clientes" element={<Navigate to="/" replace />} />
-        <Route path="/dre" element={<Navigate to="/" replace />} />
+        <Route path="/dre" element={
+          <ProtectedRoute>
+            <AppLayout>
+              <DreComparativo />
+            </AppLayout>
+          </ProtectedRoute>
+        } />
         <Route path="/relatorios" element={<Navigate to="/" replace />} />
         <Route path="/configuracoes" element={<Navigate to="/" replace />} />
       </Routes>

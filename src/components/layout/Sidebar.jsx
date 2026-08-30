@@ -16,7 +16,7 @@ export const Sidebar = () => {
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
-        <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '1.2rem' }}>DX<span style={{ color: '#ef4444' }}>HUB</span> PRO</span>
+        <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '1.2rem' }}>Sant'Anna <span style={{ color: '#3b82f6' }}>Analytics</span></span>
       </div>
 
       <nav className="sidebar-nav">

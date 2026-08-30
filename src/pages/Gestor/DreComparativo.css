@@ -1,0 +1,102 @@
+.dre-comparativo-container {
+  padding: 0;
+}
+
+.dre-header {
+  margin-bottom: 32px;
+}
+
+.dre-filters {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.comparative-table-wrapper {
+  background-color: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.comparative-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.comparative-table th {
+  text-align: right;
+  padding: 16px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.comparative-table th:first-child {
+  text-align: left;
+}
+
+.comparative-table td {
+  padding: 12px 16px;
+  text-align: right;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.comparative-table td:first-child {
+  text-align: left;
+  padding-left: 32px; /* Identação para sub-itens */
+}
+
+/* Grupo / Subtotais */
+.group-header {
+  background-color: rgba(255, 255, 255, 0.03);
+  font-weight: 600;
+  color: var(--accent-blue);
+}
+.group-header td:first-child {
+  padding-left: 16px;
+}
+
+.subtotal-row {
+  background-color: rgba(255, 255, 255, 0.05);
+  font-weight: bold;
+}
+.subtotal-row td:first-child {
+  padding-left: 16px;
+}
+
+/* Cores específicas */
+.text-green { color: #10b981; }
+.text-red { color: #ef4444; }
+.text-muted { color: var(--text-secondary); }
+
+.delta-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.delta-badge.positive-good {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+.delta-badge.negative-bad {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+.delta-badge.positive-bad { /* Custos que subiram */
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+.delta-badge.negative-good { /* Custos que caíram */
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+.delta-badge.neutral {
+  color: var(--text-secondary);
+}

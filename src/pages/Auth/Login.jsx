@@ -49,8 +49,8 @@ export const Login = () => {
   return (
     <div className="login-container">
       <div className="login-box glass-panel">
-        <h1 className="login-title">SaaS Financeiro V2</h1>
-        <p className="login-subtitle">Gestão B2B Multi-tenant</p>
+        <h1 className="login-title">Sant'Anna Analytics</h1>
+        <p className="login-subtitle">Plataforma de Gestão B2B</p>
         
         {error && <div className="login-error">{error}</div>}
 

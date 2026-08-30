@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MetricCard } from '../../components/dashboard/MetricCard';
 import { Modal } from '../../components/common/Modal';
 import { DreTable } from '../../components/dashboard/DreTable';
@@ -17,6 +18,7 @@ const formatCurrency = (value) => {
 const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
 
 export function DashboardGestor() {
+  const navigate = useNavigate();
   const [visaoAtual, setVisaoAtual] = useState('consolidada'); 
   const [mesFiltro, setMesFiltro] = useState('todos');
   const [clientes, setClientes] = useState([]);
