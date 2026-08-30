@@ -39,9 +39,9 @@ export function DashboardGestor() {
   const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
   // Ref para impressão de PDF
-  const printRef = useRef();
+  const printRef = useRef(null);
   const handlePrint = useReactToPrint({
-    content: () => printRef.current,
+    contentRef: printRef,
     documentTitle: 'Relatorio_Consultoria_SaaS',
   });
 
