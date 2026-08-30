@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { MetricCard } from '../../components/dashboard/MetricCard';
 import { Modal } from '../../components/common/Modal';
+import { DreTable } from '../../components/dashboard/DreTable';
+import { DreModal } from '../../components/dashboard/DreModal';
+import { supabase } from '../../services/supabase';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, LineChart, Line } from 'recharts';
 import ReactMarkdown from 'react-markdown';
 import { gerarConsultoriaCFO } from '../../services/ai';
