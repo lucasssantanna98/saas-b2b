@@ -90,6 +90,11 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
+.custom-select option {
+  background-color: #0f172a;
+  color: #fff;
+}
+
 .custom-btn {
   padding: 10px 20px;
   border-radius: 8px;
@@ -147,8 +152,8 @@
     margin: 0 !important;
   }
   
-  /* Forçar que a div de IA comece numa nova página se necessário */
+  /* Esconde a seção de IA nos relatórios em PDF */
   .ai-section-print {
-    page-break-inside: avoid;
+    display: none !important;
   }
 }
