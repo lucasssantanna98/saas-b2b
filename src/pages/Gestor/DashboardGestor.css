@@ -30,6 +30,12 @@
   gap: 24px;
 }
 
+@media (max-width: 1024px) {
+  .charts-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .chart-card {
   padding: 24px;
   border-radius: 12px;

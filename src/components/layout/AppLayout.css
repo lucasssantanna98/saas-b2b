@@ -11,13 +11,55 @@
   overflow-y: auto;
 }
 
+.mobile-header {
+  display: none;
+  background-color: var(--bg-secondary, #1e293b);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 16px 20px;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+}
+
+.mobile-menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 45;
+}
+
 @media (max-width: 768px) {
-  .main-content {
-    margin-left: 0;
-    padding: 16px;
+  .mobile-header {
+    display: flex;
   }
   
-  .sidebar {
-    transform: translateX(-100%);
+  .mobile-overlay {
+    display: block;
   }
+
+  .main-content {
+    margin-left: 0;
+    padding: 80px 16px 24px 16px; /* 80px top padding for fixed header */
+  }
+  
+  /* The sidebar styling adjustment will be in Sidebar.css */
 }

@@ -5,7 +5,7 @@ import { supabase } from '../../services/supabase';
 import { useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 
-export const Sidebar = () => {
+export const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState('');
 
@@ -21,7 +21,7 @@ export const Sidebar = () => {
   };
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-logo">
         <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '1.2rem' }}>Sant'Anna <span style={{ color: '#3b82f6' }}>Analytics</span></span>
       </div>
