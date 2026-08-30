@@ -5,6 +5,7 @@ import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DreComparativo } from './pages/Gestor/DreComparativo';
 import { GestaoUsuarios } from './pages/Admin/GestaoUsuarios';
+import { Configuracoes } from './pages/Gestor/Configuracoes';
 
 function App() {
   return (
@@ -40,8 +41,13 @@ function App() {
         {/* Rotas legadas e em construção redirecionam para a home */}
         <Route path="/dashboard" element={<Navigate to="/" replace />} />
         <Route path="/clientes" element={<Navigate to="/" replace />} />
-        <Route path="/relatorios" element={<Navigate to="/" replace />} />
-        <Route path="/configuracoes" element={<Navigate to="/" replace />} />
+        <Route path="/configuracoes" element={
+          <ProtectedRoute>
+            <AppLayout>
+              <Configuracoes />
+            </AppLayout>
+          </ProtectedRoute>
+        } />
         
         {/* Rota 404 (Fallback) */}
         <Route path="*" element={<Navigate to="/" replace />} />

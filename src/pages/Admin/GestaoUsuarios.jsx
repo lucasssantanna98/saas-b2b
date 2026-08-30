@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabase';
-import { ShieldAlert, Users, Calendar, Store } from 'lucide-react';
+import { ShieldAlert, Users, Calendar, Store, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Modal } from '../../components/common/Modal';
 
 export const GestaoUsuarios = () => {
   const [gestores, setGestores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState('');
   const navigate = useNavigate();
+
+  // Estados para o Modal de Criação
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     checkAdminAccess();
@@ -25,27 +32,41 @@ export const GestaoUsuarios = () => {
 
   const fetchGestores = async () => {
     setLoading(true);
-    
-    // Busca a lista de e-mails da view secreta
     const { data: usersData, error: usersError } = await supabase.from('vw_gestores').select('*').order('created_at', { ascending: false });
-    
     if (usersError) {
       console.error(usersError);
       setLoading(false);
       return;
     }
-
-    // Busca a contagem de lojas por gestor
     const { data: lojasData } = await supabase.from('clientes').select('id, user_id');
-    
-    // Mescla os dados
     const gestoresComLojas = usersData.map(u => {
       const numLojas = lojasData ? lojasData.filter(l => l.user_id === u.id).length : 0;
       return { ...u, numLojas };
     });
-
     setGestores(gestoresComLojas);
     setLoading(false);
+  };
+
+  const handleCriarGestor = async (e) => {
+    e.preventDefault();
+    setIsCreating(true);
+    
+    // ATENÇÃO: Ao criar um usuário pelo frontend, o Supabase loga na conta nova automaticamente.
+    // Para manter a segurança sem expor chaves mestras, a solução é forçar o logout após a criação.
+    const { error } = await supabase.auth.signUp({
+      email: newEmail,
+      password: newPassword,
+    });
+
+    if (error) {
+      alert("Erro ao criar gestor: " + error.message);
+      setIsCreating(false);
+      return;
+    }
+
+    alert("Gestor criado com sucesso! Por segurança arquitetural, o sistema fará logout para você poder entregar o acesso ao consultor.");
+    await supabase.auth.signOut();
+    navigate('/login');
   };
 
   const formatDate = (dateString) => {
@@ -57,12 +78,18 @@ export const GestaoUsuarios = () => {
 
   return (
     <div style={{ padding: '0' }}>
-      <header style={{ marginBottom: '32px' }}>
-        <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <ShieldAlert color="#f59e0b" size={32} />
-          Painel do Super Administrador
-        </h1>
-        <p className="page-subtitle">Acesso restrito. Visão global de todos os gestores cadastrados no sistema.</p>
+      <header style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <ShieldAlert color="#f59e0b" size={32} />
+            Painel do Super Administrador
+          </h1>
+          <p className="page-subtitle">Acesso restrito. Visão global de todos os gestores cadastrados no sistema.</p>
+        </div>
+        
+        <button className="custom-btn" onClick={() => setIsModalOpen(true)} style={{ backgroundColor: 'var(--accent-blue, #3b82f6)', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Plus size={18} /> Cadastrar Novo Gestor
+        </button>
       </header>
 
       <div className="metrics-grid" style={{ marginBottom: '32px' }}>
@@ -125,6 +152,46 @@ export const GestaoUsuarios = () => {
           </tbody>
         </table>
       </div>
+
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Cadastrar Novo Gestor">
+        <form onSubmit={handleCriarGestor}>
+          <div className="form-group" style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>E-mail do Gestor</label>
+            <input 
+              type="email" 
+              className="form-input" 
+              value={newEmail} 
+              onChange={e => setNewEmail(e.target.value)} 
+              placeholder="email@empresa.com"
+              required 
+              style={{ width: '100%', padding: '12px', backgroundColor: 'rgba(15,23,42,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px' }}
+            />
+          </div>
+          
+          <div className="form-group" style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--text-secondary)' }}>Senha Provisória</label>
+            <input 
+              type="text" 
+              className="form-input" 
+              value={newPassword} 
+              onChange={e => setNewPassword(e.target.value)} 
+              placeholder="Mínimo 6 caracteres"
+              minLength={6}
+              required 
+              style={{ width: '100%', padding: '12px', backgroundColor: 'rgba(15,23,42,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px' }}
+            />
+          </div>
+          
+          <div className="form-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)} style={{ padding: '8px 16px', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
+              Cancelar
+            </button>
+            <button type="submit" className="btn-primary" disabled={isCreating} style={{ padding: '8px 16px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
+              {isCreating ? 'Criando...' : 'Criar Gestor'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };
