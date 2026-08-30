@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Settings, LogOut, Receipt } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, LogOut, Receipt, ShieldAlert } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 import { useNavigate } from 'react-router-dom';
 import './Sidebar.css';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
+  const [userEmail, setUserEmail] = useState('');
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserEmail(user.email);
+    });
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -41,6 +48,14 @@ export const Sidebar = () => {
         </NavLink>
 
         <div className="nav-section" style={{ marginTop: '24px' }}>Sistema</div>
+        
+        {userEmail === 'lucass.santanna98@gmail.com' && (
+          <NavLink to="/admin" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} style={{ color: '#f59e0b' }}>
+            <ShieldAlert size={20} />
+            <span>Super Admin</span>
+          </NavLink>
+        )}
+
         <NavLink to="/configuracoes" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
           <Settings size={20} />
           <span>Configurações</span>

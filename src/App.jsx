@@ -4,6 +4,7 @@ import { Login } from './pages/Auth/Login';
 import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DreComparativo } from './pages/Gestor/DreComparativo';
+import { GestaoUsuarios } from './pages/Admin/GestaoUsuarios';
 
 function App() {
   return (
@@ -24,6 +25,14 @@ function App() {
           <ProtectedRoute>
             <AppLayout>
               <DreComparativo />
+            </AppLayout>
+          </ProtectedRoute>
+        } />
+
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <AppLayout>
+              <GestaoUsuarios />
             </AppLayout>
           </ProtectedRoute>
         } />
