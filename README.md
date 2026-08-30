@@ -51,6 +51,32 @@ VITE_SUPABASE_ANON_KEY=sua-anon-key-do-supabase
 npm run dev
 ```
 
+## 📊 Lógica Matemática do Dashboard (DRE)
+
+Para garantir que a plataforma sirva como uma verdadeira ferramenta de consultoria financeira, todos os cálculos automatizados do painel seguem os padrões contábeis gerenciais:
+
+1. **Faturamento Bruto (Receita Operacional Bruta)**: 
+   `= Vendas Cartão + Vendas Pix/Dinheiro`
+2. **Deduções da Receita**: 
+   `= Taxas de Maquininha (MDR) + Impostos sobre Vendas (Simples Nacional/ICMS)`
+3. **Receita Líquida**: 
+   `= Faturamento Bruto - Deduções`
+4. **Lucro Bruto (Margem de Contribuição Bruta)**: 
+   `= Receita Líquida - CMV (Custo da Mercadoria Vendida)`
+5. **Despesas Operacionais (Custos Fixos)**: 
+   `= Aluguel/Despesas do Ponto + Folha de Pagamento + Despesas Gerais`
+6. **Provisões Retidas**: 
+   `= Impostos sobre Lucro (IR/CSLL) + Pró-Labore`
+7. **Lucro Líquido Final**: 
+   `= Lucro Bruto - Despesas Operacionais - Provisões Retidas`
+8. **Margem Líquida (%)**: 
+   `= (Lucro Líquido / Faturamento Bruto) * 100`
+
+### ⚖️ Cálculo do Ponto de Equilíbrio (Break-Even Point)
+O Ponto de Equilíbrio calcula quanto a loja precisa faturar *apenas para pagar as contas* (Lucro zero).
+- **Índice de Margem de Contribuição (IMC)**: `(Faturamento Bruto - Custos Variáveis Totais) / Faturamento Bruto`
+- **Ponto de Equilíbrio (R$)**: `Despesas Operacionais Totais / IMC`
+
 ## 🔒 Setup de Banco de Dados e Regras (Supabase)
 
 Para inicializar a arquitetura, execute os seguintes scripts SQL no seu editor do Supabase:
