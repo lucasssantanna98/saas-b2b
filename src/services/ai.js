@@ -16,9 +16,6 @@ export const gerarConsultoriaCFO = async (dadosDRE, apiKey) => {
     genAI = new GoogleGenerativeAI(apiKey);
   }
 
-  // Define o modelo. Usaremos 'gemini-flash-latest' que é compatível com as chaves mais recentes da API
-  const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-
   // Calcula o impacto % das taxas de maquininha
   const impactoMDR = dadosDRE.receitaBruta > 0 
     ? ((dadosDRE.taxas_maquininha / dadosDRE.receitaBruta) * 100).toFixed(1) 
@@ -48,12 +45,34 @@ INSTRUÇÕES DE FORMATAÇÃO:
 3. Não use termos técnicos demais sem explicar. Use formatação em negrito para destacar valores que assustam (como o valor das taxas).
 `;
 
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
-  } catch (error) {
-    console.error("Erro no Gemini AI:", error);
-    throw new Error('Erro da IA do Google: ' + error.message);
+  const modelosParaTentar = [
+    "gemini-flash-latest",
+    "gemini-3.5-flash",
+    "gemini-2.5-flash",
+    "gemini-pro-latest"
+  ];
+
+  let ultimoErro = null;
+
+  for (const nomeModelo of modelosParaTentar) {
+    try {
+      const model = genAI.getGenerativeModel({ model: nomeModelo });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.warn(`Tentativa falhou no modelo ${nomeModelo}:`, error.message);
+      ultimoErro = error;
+      
+      // Se o erro não for de servidor ocupado (503) ou limite de requisições (429), encerra na hora
+      if (!error.message.includes('503') && !error.message.includes('429')) {
+        throw new Error(`Erro da IA (${nomeModelo}): ` + error.message);
+      }
+      // Se for 503, o loop vai simplesmente rodar e tentar o próximo modelo da lista!
+    }
   }
+
+  // Se o código chegou até aqui, todos os modelos tentados deram 503/429
+  console.error("Todos os modelos falharam com sobrecarga:", ultimoErro);
+  throw new Error('Todos os servidores de IA do Google estão superlotados neste exato segundo. Dê um respiro de 1 minuto e tente novamente!');
 };
